@@ -203,34 +203,45 @@ route(/^\/$/, () => `
       <p class="lead">Учёт для частных учебных центров: отметка урока сама списывает абонемент, обновляет долг, сообщает родителю и начисляет зарплату.</p>
       <div class="roles">
         <a class="role owner" href="#/o/home"><span class="ic">${ic('home', 20)}</span><span><b>Владелец центра</b><span>Деньги, долги, расписание, зарплаты</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/t"><span class="ic">${ic('teacher', 20)}</span><span><b>Преподаватель</b><span>Отметить урок за 10 секунд с телефона</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/p"><span class="ic">${ic('user', 20)}</span><span><b>Родитель</b><span>Остаток занятий и оплата через Kaspi QR</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/t/today"><span class="ic">${ic('teacher', 20)}</span><span><b>Преподаватель</b><span>Отметить урок за 10 секунд с телефона</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/p/home"><span class="ic">${ic('user', 20)}</span><span><b>Родитель</b><span>Остаток занятий и оплата через Kaspi QR</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/s/home"><span class="ic">${ic('book', 20)}</span><span><b>Ученик</b><span>Расписание, посещаемость, сколько осталось</span></span>${ic('chev', 16)}</a>
         <a class="role" href="#/catalog"><span class="ic">${ic('store', 20)}</span><span><b>Каталог</b><span>Свободные места из живого расписания</span></span>${ic('chev', 16)}</a>
       </div>
       <p class="note">Демо-центр «${esc(S.center.name)}», ${esc(S.center.city)} · пароль не нужен <button class="btn ghost sm" data-act="reset">${ic('reset', 14)}Сбросить демо</button></p>
     </div>
     <div class="legal"><span>© 2026 Sabaq</span><span>Данные демонстрационные и хранятся в этом браузере</span></div>
   </section>
-  <section class="login-art">
-    <p class="cap">Главная владельца: деньги, долги и всё, что требует внимания, — на одном экране</p>
-    <figure class="shot"><img src="img/dashboard.jpg" alt="Главная владельца в Sabaq" width="1800" height="1125"></figure>
+  <section class="login-art dark">
+    <div class="pattern" aria-hidden="true"><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="o"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i></div>
+    <div class="art-copy">
+      <p class="q">Каждый проведённый урок списывается в тот же момент — без вечерней сверки Excel и Kaspi.</p>
+      <div class="facts"><div><b>&lt; 0,3 %</b><span>несписанных уроков — цель пилотов</span></div><div><b>10 с</b><span>чтобы отметить урок</span></div><div><b>4 роли</b><span>владелец, преподаватель, родитель, ученик</span></div></div>
+    </div>
   </section>
 </main>`);
 
 /* ------------------------------------------------------------------ owner shell */
-function shell(active, body) {
-  const n = unmarked().length + S.leads.filter(l => l.status === 'new').length;
-  const nav = [['home', 'home', 'Главная', n], ['students', 'users', 'Ученики'], ['schedule', 'cal', 'Расписание'], ['finance', 'wallet', 'Финансы'], ['catalog', 'store', 'Каталог']];
-  const titles = { home: 'Главная', students: 'Ученики', schedule: 'Расписание', finance: 'Финансы', catalog: 'Каталог' };
+const ROLE = {
+  o: { base: '#/o/', who: () => ['Ерлан Касенов', 'Владелец'], nav: () => [['home', 'home', 'Главная', unmarked().length + S.leads.filter(l => l.status === 'new').length], ['students', 'users', 'Ученики'], ['schedule', 'cal', 'Расписание'], ['finance', 'wallet', 'Финансы'], ['catalog', 'store', 'Каталог']] },
+  t: { base: '#/t/', who: () => [TCH(teacherId).name, 'Преподаватель'], nav: () => [['today', 'check', 'Отметить урок', tOpen().length], ['lessons', 'cal', 'Мои занятия'], ['groups', 'users', 'Мои группы'], ['pay', 'wallet', 'Зарплата'], ['profile', 'user', 'Профиль']] },
+  p: { base: '#/p/', who: () => [STU(childId).parent, 'Родитель'], nav: () => [['home', 'home', 'Главная'], ['schedule', 'cal', 'Расписание'], ['payments', 'wallet', 'Оплаты', debt(childId) ? '!' : 0], ['profile', 'user', 'Профиль']] },
+  s: { base: '#/s/', who: () => [STU(childId).name, 'Ученик'], nav: () => [['home', 'home', 'Главная'], ['schedule', 'cal', 'Расписание'], ['attendance', 'book', 'Посещаемость'], ['profile', 'user', 'Профиль']] },
+};
+const OTHER = [['o', '#/o/home', 'home', 'Владелец'], ['t', '#/t/today', 'teacher', 'Преподаватель'], ['p', '#/p/home', 'user', 'Родитель'], ['s', '#/s/home', 'book', 'Ученик']];
+const MK = '<img class="mk" src="icons/mark.svg" alt="">';
+function shell(active, body, role = 'o') {
+  const R = ROLE[role], [meName, meSub] = R.who(), nav = R.nav();
+  const title = (nav.find(n => n[0] === active) || [0, 0, ''])[2];
   return `<div class="shell"><aside class="side">
-    <div class="logo brand"><img class="mk" src="icons/mark.svg" alt=""><img src="img/logo_sabaq.png" alt="Sabaq"></div>
-    <div class="org"><span class="sq">IQ</span><div><b>${esc(S.center.name)}</b><span>${esc(S.center.city)} · ${S.students.length} учеников</span></div></div>
-    <nav class="nav" aria-label="Разделы">${nav.map(([k, i, t, b]) => `<a href="#/o/${k}" class="${active === k ? 'on' : ''}"${active === k ? ' aria-current="page"' : ''}>${ic(i)}<span>${t}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('')}
-      <div class="cap">Другие роли</div><a href="#/t">${ic('teacher')}<span>Преподаватель</span></a><a href="#/p">${ic('user')}<span>Родитель</span></a></nav>
-    <div class="bottom"><div class="me"><span class="av">ЕК</span><div><b>Ерлан Касенов</b><span>Владелец</span></div><a href="#/" class="btn ghost sm" style="margin-left:auto" aria-label="Сменить роль">${ic('out', 14)}</a></div></div>
+    <div class="logo brand">${MK}<img src="img/logo_sabaq.png" alt="Sabaq"></div>
+    <div class="org"><span class="sq">IQ</span><div><b>${esc(S.center.name)}</b><span>${esc(S.center.city)} · ${role === 'o' ? S.students.length + ' учеников' : meSub.toLowerCase()}</span></div></div>
+    <nav class="nav" aria-label="Разделы">${nav.map(([k, i, t, b]) => `<a href="${R.base}${k}" class="${active === k ? 'on' : ''}"${active === k ? ' aria-current="page"' : ''}>${ic(i)}<span>${t}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('')}
+      <div class="cap alt">Демо: другие роли</div>${OTHER.filter(o => o[0] !== role).map(o => `<a class="alt" href="${o[1]}">${ic(o[2])}<span>${o[3]}</span></a>`).join('')}</nav>
+    <div class="bottom"><div class="me"><span class="av">${esc(initials(meName))}</span><div><b>${esc(meName)}</b><span>${esc(meSub)}</span></div><a href="#/" class="btn ghost sm" style="margin-left:auto" aria-label="Выйти">${ic('out', 14)}</a></div></div>
   </aside><main class="main">
-    <div class="topbar"><div class="crumb">${esc(S.center.name)} / <b>${titles[active]}</b></div>
-      <label class="search">${ic('users', 15)}<span class="sr">Поиск ученика</span><input data-input="gsearch" placeholder="Найти ученика" value="${active === 'students' ? esc(studentQuery) : ''}"><span class="kbd">Enter</span></label></div>
+    <div class="topbar"><span class="brand tb-brand">${MK}</span><div class="crumb">${esc(S.center.name)} / <b>${title}</b></div>
+      ${role === 'o' ? `<label class="search">${ic('users', 15)}<span class="sr">Поиск ученика</span><input data-input="gsearch" placeholder="Найти ученика" value="${active === 'students' ? esc(studentQuery) : ''}"><span class="kbd">Enter</span></label>` : `<a href="#/" class="btn ghost sm topexit">${ic('out', 14)}Выйти</a>`}</div>
     <div class="content">${body}</div></main></div>`;
 }
 const head = (title, sub, actions = '') => `<div class="head"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="row">${actions}</div></div>`;
@@ -309,7 +320,7 @@ route(/^\/o\/s\/(\w+)$/, id => {
         : `<div><span class="small muted">${fdate(r.date)}</span><span>${r.m === 'p' ? 'Был на уроке' : r.m === 'a' ? 'Пропуск без причины' : 'Пропуск по уважительной'}</span><b class="num ${charges(r.m) ? '' : 'muted'}">${charges(r.m) ? '−1' : '0'}</b></div>`).join('')}</div></section>
     </div>
     <div class="stack">
-      <section class="panel"><h2>Родитель</h2>${who(s.parent, esc(s.phone))}<p class="small muted" style="margin-top:12px">Видит остаток занятий и платит через Kaspi QR в своём кабинете.</p><a class="btn ghost sm" style="margin-top:12px" href="#/p/${id}">Открыть как родитель</a></section>
+      <section class="panel"><h2>Родитель</h2>${who(s.parent, esc(s.phone))}<p class="small muted" style="margin-top:12px">Видит остаток занятий и платит через Kaspi QR в своём кабинете.</p><a class="btn ghost sm" style="margin-top:12px" href="#/p/child/${id}">Открыть как родитель</a></section>
       <section class="panel"><h2>Посещаемость</h2><div class="balance"><span class="big num" style="font-size:44px">${held.length ? Math.round(present / held.length * 100) : 0}%</span><span class="muted">${present} из ${held.length} уроков</span></div></section>
     </div>
   </div>`);
@@ -413,50 +424,162 @@ function commitMarks(l, draft) {
   return `<div class="chain">${steps.map((s, i) => `<div style="animation-delay:${i * 0.28}s"><span class="k ${s[1]}">${ic(s[0], 15)}</span><b>${esc(s[2])}</b><span class="v num">${esc(s[3])}</span></div>`).join('')}</div>`;
 }
 
-/* ------------------------------------------------------------------ teacher (mobile) */
-let teacherId = 't1', teacherLesson = null, teacherDraft = {}, teacherDone = null;
-route(/^\/t$/, () => {
-  const t = TCH(teacherId);
-  const mine = S.lessons.filter(l => G(l.gid).teacherId === teacherId);
-  const today = mine.filter(l => l.date === T).sort((a, b) => a.start.localeCompare(b.start));
-  const overdue = mine.filter(l => l.status === 'planned' && l.date < T);
-  const next = mine.filter(l => l.date > T).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).slice(0, 2);
-  const list = [...overdue, ...today];
-  if (!teacherLesson || !list.find(l => l.id === teacherLesson)) { const firstOpen = list.find(l => l.status === 'planned') || list[0]; teacherLesson = firstOpen ? firstOpen.id : null; teacherDraft = {}; }
-  const L = S.lessons.find(l => l.id === teacherLesson);
-  if (L && L.status === 'held' && !Object.keys(teacherDraft).length) teacherDraft = { ...L.marks };
-  return `<div class="mobile"><div class="screen">
-  <header class="mtop"><div class="bar"><span class="brand"><img class="mk" src="icons/mark.svg" alt=""><img src="img/logo_sabaq.png" alt="Sabaq"></span><a class="exit" href="#/">Выйти</a></div>
-    <h1>${esc(t.name.split(' ')[0])}, ${(n => n ? `${n} ${plural(n, 'урок', 'урока', 'уроков')} к отметке` : list.length ? 'всё отмечено' : 'сегодня уроков нет')(list.filter(l => l.status === 'planned').length)}</h1>
-    <p>${DOWF[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTHS[TODAY.getMonth()]} · <label for="tsel" class="sr">Преподаватель</label><select id="tsel" data-input="teacher" style="background:transparent;border:0;font-size:13px">${S.teachers.map(x => `<option value="${x.id}" ${x.id === teacherId ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
-  <div class="mbody">
-    ${list.length ? `<div class="lessonpick">${list.map(l => { const g = G(l.gid); return `<button class="${l.id === teacherLesson ? 'on' : ''}" data-act="tpick" data-id="${l.id}"><span class="t num">${l.start}</span><span><b>${esc(g.name)}</b><div class="small muted">${rel(l.date)} · ${esc(ROOM(g.roomId).name)}</div></span>${l.status === 'held' ? '<span class="pill ok">отмечен</span>' : l.date < T ? '<span class="pill bad">просрочен</span>' : '<span class="pill n">к отметке</span>'}</button>`; }).join('')}</div>` : `<div class="mcard empty">Отмечать нечего. Ближайшие уроки: ${next.map(l => `${rel(l.date)} в ${l.start}`).join(', ') || 'не запланированы'}.</div>`}
-    ${L ? (teacherDone === L.id ? `<div class="mcard"><h2 style="margin-bottom:6px">Готово. Вот что сделал Sabaq</h2><div id="chain"></div></div>
-      <button class="btn ghost" data-act="tedit">Исправить отметки</button>` : `<div class="mcard"><h2 style="margin-bottom:4px">${esc(G(L.gid).name)}</h2><div class="small muted" style="margin-bottom:10px">По умолчанию все пришли — отметьте только отсутствующих</div><div class="mark">${markRows(L, teacherDraft)}</div></div>`) : ''}
-  </div>
-  ${L && teacherDone !== L.id ? `<div class="sticky-cta"><button class="btn teal lg" data-act="tcommit">${ic('check', 20)}${L.status === 'held' ? 'Сохранить исправления' : `Урок проведён · ${groupStudents(L.gid).length} ${plural(groupStudents(L.gid).length, 'ученик', 'ученика', 'учеников')}`}</button></div>` : ''}
-  </div></div>`;
+/* ------------------------------------------------------------------ cabinets: teacher, parent, student */
+let teacherId = 't1', teacherLesson = null, teacherDraft = {}, teacherDone = null, childId = 's1', payMonth = 0;
+const TPHONE = { t1: '+7 701 214 55 10', t2: '+7 707 388 12 04', t3: '+7 747 509 33 61', t4: '+7 777 120 48 92' };
+const tLessons = () => S.lessons.filter(l => G(l.gid).teacherId === teacherId);
+const tOpen = () => tLessons().filter(l => l.status === 'planned' && l.date <= T);
+const byTime = (a, b) => (a.date + a.start).localeCompare(b.date + b.start);
+const statusPill = l => l.status === 'held' ? '<span class="pill ok">проведён</span>' : unmarked().includes(l) ? '<span class="pill bad">не отмечен</span>' : l.date === T ? '<span class="pill warn">сегодня</span>' : '<span class="pill n">запланирован</span>';
+function attendance(sid) { const s = STU(sid); const held = S.lessons.filter(l => l.gid === s.gid && l.status === 'held' && l.marks[sid]); const p = held.filter(l => l.marks[sid] === 'p').length; return { held, p, pct: held.length ? Math.round(p / held.length * 100) : 0 }; }
+function pipsFor(b, n) { return [...Array(Math.min(Math.max(n, b), 24))].map((_, i) => `<i class="${i < b ? 'left' : ''}"></i>`).join('') + (b < 0 ? [...Array(Math.min(-b, 12))].map(() => '<i class="debt"></i>').join('') : ''); }
+const kv = rows => `<dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+const presentOf = l => Object.values(l.marks).filter(m => m === 'p').length;
+
+/* teacher */
+route(/^\/t(?:\/(\w+))?$/, page => {
+  page = ['today', 'lessons', 'groups', 'pay', 'profile'].includes(page) ? page : 'today';
+  const t = TCH(teacherId), mine = tLessons(), first = t.name.split(' ')[0];
+  if (page === 'today') {
+    const list = [...mine.filter(l => l.status === 'planned' && l.date < T), ...mine.filter(l => l.date === T)].sort(byTime);
+    const next = mine.filter(l => l.date > T).sort(byTime).slice(0, 4);
+    if (!teacherLesson || !list.find(l => l.id === teacherLesson)) { const f = list.find(l => l.status === 'planned') || list[0]; teacherLesson = f ? f.id : null; teacherDraft = {}; }
+    const L = S.lessons.find(l => l.id === teacherLesson);
+    if (L && L.status === 'held' && !Object.keys(teacherDraft).length) teacherDraft = { ...L.marks };
+    const open = list.filter(l => l.status === 'planned').length;
+    const n = L ? groupStudents(L.gid).length : 0;
+    const title = open ? `${open} ${plural(open, 'урок', 'урока', 'уроков')} к отметке` : list.length ? 'всё отмечено' : 'сегодня уроков нет';
+    const left = `<section class="panel"><h2>Сегодня и неотмеченные</h2>${list.length ? `<div class="lessonpick">${list.map(l => { const g = G(l.gid); return `<button class="${l.id === teacherLesson ? 'on' : ''}" data-act="tpick" data-id="${l.id}"><span class="t num">${l.start}</span><span><b>${esc(g.name)}</b><div class="small muted">${rel(l.date)} · ${esc(ROOM(g.roomId).name)}</div></span>${l.status === 'held' ? '<span class="pill ok">отмечен</span>' : l.date < T ? '<span class="pill bad">просрочен</span>' : '<span class="pill n">к отметке</span>'}</button>`; }).join('')}</div>` : '<div class="empty">Сегодня уроков нет — отмечать нечего.</div>'}</section>
+      <section class="panel"><h2>Дальше</h2>${next.map(l => `<div class="line"><span>${rel(l.date)}, ${l.start}</span><span class="muted">${esc(G(l.gid).name)}</span></div>`).join('') || '<div class="muted">Не запланировано</div>'}</section>`;
+    let right = '<section class="panel empty">Выберите урок, чтобы отметить посещаемость.</section>';
+    if (L && teacherDone === L.id) right = `<section class="panel"><h2>Готово. Вот что сделал Sabaq</h2><div id="chain"></div><button class="btn ghost" style="margin-top:14px" data-act="tedit">Исправить отметки</button></section>`;
+    else if (L) right = `<section class="panel"><h2>${esc(G(L.gid).name)}<span class="act small muted" style="font-weight:400">${rel(L.date)}, ${L.start}</span></h2><div class="small muted" style="margin:-6px 0 8px">По умолчанию все пришли — отметьте только отсутствующих</div><div class="mark">${markRows(L, teacherDraft)}</div>
+          <button class="btn teal lg" style="width:100%;margin-top:16px" data-act="tcommit">${ic('check', 20)}${L.status === 'held' ? 'Сохранить исправления' : `Урок проведён · ${n} ${plural(n, 'ученик', 'ученика', 'учеников')}`}</button></section>`;
+    const [pick, nextP] = left.split('<section class="panel"><h2>Дальше</h2>');
+    return shell('today', `${head(`${esc(first)}, ${title}`, `${DOWF[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTHS[TODAY.getMonth()]}`)}<div class="cols t-today"><div class="stack">${pick}</div><div class="stack">${right}<section class="panel"><h2>Дальше</h2>${nextP}</div></div>`, 't');
+  }
+  if (page === 'lessons') {
+    const mon = addDays(TODAY, -((TODAY.getDay() + 6) % 7)), end = addDays(mon, 13);
+    const ls = mine.filter(l => l.date >= iso(mon) && l.date <= iso(end)).sort(byTime);
+    const days = [...new Set(ls.map(l => l.date))];
+    return shell('lessons', `${head('Мои занятия', `${mon.getDate()} ${MONTHS[mon.getMonth()]} — ${end.getDate()} ${MONTHS[end.getMonth()]} · ${ls.length} ${plural(ls.length, 'урок', 'урока', 'уроков')}`)}
+    <section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>День</th><th>Время</th><th>Группа</th><th>Аудитория</th><th class="r">Учеников</th><th class="r">Статус</th></tr></thead><tbody>
+    ${days.map(d => ls.filter(l => l.date === d).map((l, i) => { const g = G(l.gid), can = l.status === 'planned' && l.date <= T; return `<tr class="${can ? 'link' : ''}" ${can ? `data-act="tpick" data-id="${l.id}"` : ''}><td>${i ? '' : `<b>${rel(d)}</b>`}</td><td class="num">${l.start}–${hhmm(mins(l.start) + l.dur)}</td><td>${esc(g.name)}</td><td class="muted">${esc(ROOM(g.roomId).name)}</td><td class="r num">${l.status === 'held' ? `${presentOf(l)} из ${Object.keys(l.marks).length}` : groupStudents(g.id).length}</td><td class="r">${statusPill(l)}</td></tr>`; }).join('')).join('')}
+    </tbody></table></div></section>`, 't');
+  }
+  if (page === 'groups') {
+    const gs = S.groups.filter(g => g.teacherId === teacherId);
+    return shell('groups', `${head('Мои группы', `${gs.length} ${plural(gs.length, 'группа', 'группы', 'групп')} · ${gs.reduce((a, g) => a + groupStudents(g.id).length, 0)} учеников`)}
+    <div class="stack">${gs.map(g => `<section class="panel"><h2>${esc(g.name)}<span class="act small muted" style="font-weight:400">${g.slots.map(x => DOW[x.dow]).join(', ')} в ${g.slots[0].start} · ${esc(ROOM(g.roomId).name)}</span></h2>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ученик</th><th>Посещаемость</th><th class="r">Абонемент</th></tr></thead><tbody>
+      ${groupStudents(g.id).map(s => { const a = attendance(s.id); return `<tr><td>${who(s.name)}</td><td><div class="meter"><i style="width:${a.pct}%"></i></div><span class="small muted">${a.pct}% · ${a.p} из ${a.held.length}</span></td><td class="r">${balPill(balance(s.id))}</td></tr>`; }).join('')}
+      </tbody></table></div></section>`).join('')}</div>`, 't');
+  }
+  if (page === 'pay') {
+    const ref = new Date(TODAY.getFullYear(), TODAY.getMonth() - payMonth, 1);
+    const held = mine.filter(l => l.status === 'held' && inMonth(l.date, ref)).sort(byTime).reverse();
+    return shell('pay', `${head('Зарплата', 'Считается только по отмеченным урокам · выплата до 5 числа следующего месяца', `<div class="seg"><button class="${payMonth === 0 ? 'on' : ''}" data-act="tmonth" data-m="0">${MONTHS1[TODAY.getMonth()]}</button><button class="${payMonth === 1 ? 'on' : ''}" data-act="tmonth" data-m="1">${MONTHS1[(TODAY.getMonth() + 11) % 12]}</button></div>`)}
+    <div class="strip">
+      <div class="hl"><div class="v num">${money(held.length * t.rate)}</div><div class="l">начислено за ${MONTHS1[ref.getMonth()]}</div></div>
+      <div><div class="v num">${held.length}</div><div class="l">проведённых уроков</div></div>
+      <div><div class="v num">${money(t.rate)}</div><div class="l">ставка за урок</div></div>
+      <div><div class="v num">${held.reduce((a, l) => a + presentOf(l), 0)}</div><div class="l">учеников пришло на уроки</div></div>
+    </div>
+    <section class="panel"><h2>Начисления</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Дата</th><th>Группа</th><th class="r">Пришли</th><th class="r">Сумма</th></tr></thead><tbody>
+    ${held.map(l => `<tr><td class="num">${fdow(l.date)}, ${l.start}</td><td>${esc(G(l.gid).name)}</td><td class="r num">${presentOf(l)} из ${Object.keys(l.marks).length}</td><td class="r num"><b>${money(t.rate)}</b></td></tr>`).join('') || `<tr><td colspan="4"><div class="empty">В этом месяце уроков ещё не было.</div></td></tr>`}
+    </tbody></table></div></section>`, 't');
+  }
+  const gs = S.groups.filter(g => g.teacherId === teacherId), st = gs.flatMap(g => groupStudents(g.id));
+  const att = st.length ? Math.round(st.reduce((a, s) => a + attendance(s.id).pct, 0) / st.length) : 0;
+  return shell('profile', `${head('Профиль')}
+  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(t.name))}</span><div><h2 style="font-size:20px">${esc(t.name)}</h2><div class="muted">${esc(t.subject)} · ${esc(S.center.name)}</div></div></div>
+    ${kv([['Телефон', esc(TPHONE[t.id] || '—')], ['Ставка', money(t.rate) + ' за урок'], ['Группы', gs.map(g => esc(g.name)).join('<br>')], ['Учеников', st.length], ['Средняя посещаемость', att + '%']])}</section>
+  <section class="panel"><h2>Демо: другой преподаватель</h2><div class="field"><label for="tsel">Преподаватель</label><select id="tsel" data-input="teacher">${S.teachers.map(x => `<option value="${x.id}" ${x.id === teacherId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></div></section></div>`, 't');
 });
 
-/* ------------------------------------------------------------------ parent (mobile) */
-route(/^\/p(?:\/(\w+))?$/, sid => {
-  const s = STU(sid) || STU('s1'); const g = G(s.gid); const b = balance(s.id);
-  const rows = ledger(s.id).reverse().slice(0, 8);
-  const upcoming = S.lessons.filter(l => l.gid === g.id && l.date >= T && l.status === 'planned').sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).slice(0, 3);
-  const pips = [...Array(Math.min(Math.max(g.pkgLessons, b), 24))].map((_, i) => `<i class="${i < b ? 'left' : ''}"></i>`).join('') + (b < 0 ? [...Array(Math.min(-b, 12))].map(() => '<i class="debt"></i>').join('') : '');
-  return `<div class="mobile"><div class="screen">
-  <header class="mtop"><div class="bar"><span class="brand"><img class="mk" src="icons/mark.svg" alt=""><img src="img/logo_sabaq.png" alt="Sabaq"></span><a class="exit" href="#/">Выйти</a></div>
-    <h1>${esc(s.parent.split(' ')[0])}, здравствуйте</h1><p><label for="psel" class="sr">Ребёнок</label><select id="psel" data-input="child" style="background:transparent;border:0;font-size:13px">${S.students.map(x => `<option value="${x.id}" ${x.id === s.id ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
-  <div class="mbody">
-    <div class="parent-balance"><div class="small" style="color:#B6C7D8">${esc(s.name.split(' ')[0])} · ${esc(g.name)}</div>
-      <div class="row" style="align-items:baseline;margin-top:8px"><span class="big num">${b}</span><span style="color:#C4D3E2">${b < 0 ? plural(-b, 'занятие в долг', 'занятия в долг', 'занятий в долг') : plural(b, 'занятие осталось', 'занятия осталось', 'занятий осталось')}</span></div>
-      <div class="pips" aria-hidden="true">${pips}</div>
-      <p>${b < 0 ? `К оплате ${money(debt(s.id))}. Оплатите, чтобы ${esc(s.name.split(' ')[0])} продолжал заниматься.` : b <= 1 ? 'Абонемент почти закончился — продлите заранее.' : 'Списывается только за проведённые уроки.'}</p>
-      <button class="btn teal lg" style="width:100%;margin-top:14px" data-act="ppay" data-id="${s.id}">${ic('qr', 20)}Оплатить через Kaspi QR</button></div>
-    <div class="mcard"><h3 style="margin-bottom:8px">Ближайшие уроки</h3>${upcoming.map(l => `<div class="row" style="justify-content:space-between;padding:6px 0"><span>${rel(l.date)}</span><span class="muted">${l.start} · ${esc(ROOM(g.roomId).name)}</span></div>`).join('') || '<div class="muted">Не запланированы</div>'}</div>
-    <div class="mcard"><h3 style="margin-bottom:4px">Что списано и оплачено</h3><div class="hist">${rows.map(r => r.kind === 'pay' ? `<div><span class="small muted">${fdate(r.date)}</span><span>${r.p.method === 'import' ? 'Остаток перенесён' : 'Оплата ' + money(r.p.amount)}</span><b class="teal">+${r.p.lessons}</b></div>` : `<div><span class="small muted">${fdate(r.date)}</span><span>${r.m === 'p' ? 'Урок проведён' : r.m === 'a' ? 'Пропуск' : 'Пропуск, перенесён'}</span><b class="${charges(r.m) ? '' : 'muted'}">${charges(r.m) ? '−1' : '0'}</b></div>`).join('')}</div></div>
-    <p class="small muted" style="text-align:center;padding:8px">Вопрос по оплате — центр «${esc(S.center.name)}» отвечает в WhatsApp</p>
-  </div></div></div>`;
+/* parent + student share the child's data */
+function lessonsAhead(g, n = 14) { return S.lessons.filter(l => l.gid === g.id && l.date >= T && l.date < iso(addDays(TODAY, n)) && l.status === 'planned').sort(byTime); }
+function scheduleTable(s) {
+  const g = G(s.gid), ls = lessonsAhead(g);
+  return `<section class="panel"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>День</th><th>Время</th><th>Занятие</th><th>Аудитория</th><th>Преподаватель</th></tr></thead><tbody>
+  ${ls.map(l => `<tr><td><b>${rel(l.date)}</b></td><td class="num">${l.start}–${hhmm(mins(l.start) + l.dur)}</td><td>${esc(g.name)}</td><td class="muted">${esc(ROOM(g.roomId).name)}</td><td>${esc(TCH(g.teacherId).name)}</td></tr>`).join('') || `<tr><td colspan="5"><div class="empty">Ближайших уроков нет.</div></td></tr>`}
+  </tbody></table></div></section>`;
+}
+function balanceCard(s, payable) {
+  const g = G(s.gid), b = balance(s.id);
+  return `<div class="parent-balance"><div class="small" style="color:#B6C7D8">${esc(s.name.split(' ')[0])} · ${esc(g.name)}</div>
+    <div class="row" style="align-items:baseline;margin-top:10px"><span class="big num">${b}</span><span style="color:#C4D3E2">${b < 0 ? plural(-b, 'занятие в долг', 'занятия в долг', 'занятий в долг') : plural(b, 'занятие осталось', 'занятия осталось', 'занятий осталось')}</span></div>
+    <div class="pips" aria-hidden="true">${pipsFor(b, g.pkgLessons)}</div>
+    <p>${b < 0 ? `К оплате ${money(debt(s.id))}.` : b <= 1 ? 'Абонемент почти закончился — пора продлить.' : 'Списывается только за проведённые уроки.'}</p>
+    ${payable ? `<button class="btn lg" style="width:100%;margin-top:16px" data-act="ppay" data-id="${s.id}">${ic('qr', 20)}Оплатить через Kaspi QR</button>` : ''}</div>`;
+}
+const histRows = rows => `<div class="hist">${rows.map(r => r.kind === 'pay' ? `<div><span class="small muted">${fdate(r.date)}</span><span>${r.p.method === 'import' ? 'Остаток перенесён' : 'Оплата ' + money(r.p.amount)}</span><b class="teal">+${r.p.lessons}</b></div>` : `<div><span class="small muted">${fdate(r.date)}</span><span>${r.m === 'p' ? 'Был на уроке' : r.m === 'a' ? 'Пропуск без причины' : 'Пропуск по уважительной'}</span><b class="${charges(r.m) ? '' : 'muted'}">${charges(r.m) ? '−1' : '0'}</b></div>`).join('') || '<div class="muted">Пока пусто</div>'}</div>`;
+const childSelect = () => `<div class="field"><label for="psel">Ученик</label><select id="psel" data-input="child">${S.students.map(x => `<option value="${x.id}" ${x.id === childId ? 'selected' : ''}>${esc(x.name)} — ${esc(G(x.gid).name)}</option>`).join('')}</select></div>`;
+
+route(/^\/p\/child\/(\w+)$/, id => { if (STU(id)) childId = id; return parentPage('home'); });
+route(/^\/p(?:\/(\w+))?$/, page => parentPage(page));
+function parentPage(page) {
+  page = ['home', 'schedule', 'payments', 'profile'].includes(page) ? page : 'home';
+  if (!STU(childId)) childId = S.students[0].id;
+  const s = STU(childId), g = G(s.gid), tc = TCH(g.teacherId), first = s.name.split(' ')[0], att = attendance(s.id);
+  if (page === 'home') {
+    const up = lessonsAhead(g, 7).slice(0, 4);
+    return shell('home', `${head(`${esc(s.parent.split(' ')[0])}, здравствуйте`, `${esc(s.name)} · ${esc(g.name)}`)}
+    <div class="cols"><div class="stack">${balanceCard(s, true)}
+      <section class="panel"><h2>Ближайшие уроки<a class="act small" href="#/p/schedule">Все</a></h2>${up.map(l => `<div class="line"><span><b>${rel(l.date)}</b>, ${l.start}</span><span class="muted">${esc(ROOM(g.roomId).name)} · ${esc(tc.name.split(' ')[0])}</span></div>`).join('') || '<div class="muted">Не запланированы</div>'}</section></div>
+    <div class="stack"><section class="panel"><h2>Что списано и оплачено<a class="act small" href="#/p/payments">Все</a></h2>${histRows(ledger(s.id).reverse().slice(0, 7))}</section>
+      <section class="panel"><h2>Посещаемость</h2><div class="balance"><span class="big num" style="font-size:40px">${att.pct}%</span><span class="muted">${att.p} из ${att.held.length} уроков</span></div><div class="meter" style="margin-top:14px"><i style="width:${att.pct}%"></i></div></section></div></div>`, 'p');
+  }
+  if (page === 'schedule') return shell('schedule', `${head('Расписание', `${esc(first)} · ${esc(g.name)} · ближайшие две недели`)}${scheduleTable(s)}`, 'p');
+  if (page === 'payments') {
+    const pays = S.payments.filter(p => p.sid === s.id && p.method !== 'import').sort((a, b) => b.date.localeCompare(a.date));
+    return shell('payments', `${head('Оплаты', `${esc(first)} · пакет ${lessonsWord(g.pkgLessons)} за ${money(g.pkgPrice)}`, `<button class="btn teal" data-act="ppay" data-id="${s.id}">${ic('qr', 18)}Оплатить</button>`)}
+    <div class="strip">
+      <div class="hl"><div class="v num">${money(pays.reduce((a, p) => a + p.amount, 0))}</div><div class="l">оплачено всего</div></div>
+      <div><div class="v num ${debt(s.id) ? 'red' : ''}">${money(debt(s.id))}</div><div class="l">к оплате сейчас</div></div>
+      <div><div class="v num">${balance(s.id)}</div><div class="l">занятий осталось</div></div>
+      <div><div class="v num">${att.held.filter(l => charges(l.marks[s.id])).length}</div><div class="l">занятий списано</div></div>
+    </div>
+    <div class="cols"><section class="panel"><h2>Платежи</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Дата</th><th>Способ</th><th class="r">Занятий</th><th class="r">Сумма</th></tr></thead><tbody>
+      ${pays.map(p => `<tr><td class="num">${fdate(p.date)}</td><td>${p.method === 'kaspi' ? '<span class="pill ok">Kaspi QR</span>' : '<span class="pill n">наличные</span>'}</td><td class="r num">+${p.lessons}</td><td class="r num"><b>${money(p.amount)}</b></td></tr>`).join('') || `<tr><td colspan="4"><div class="empty">Платежей пока нет.</div></td></tr>`}
+      </tbody></table></div></section>
+    <section class="panel"><h2>История списаний</h2>${histRows(ledger(s.id).reverse().filter(r => r.kind === 'lesson').slice(0, 12))}</section></div>`, 'p');
+  }
+  return shell('profile', `${head('Профиль')}
+  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(s.parent))}</span><div><h2 style="font-size:20px">${esc(s.parent)}</h2><div class="muted">Родитель · ${esc(s.phone)}</div></div></div>
+    ${kv([['Ребёнок', esc(s.name)], ['Группа', esc(g.name)], ['Преподаватель', `${esc(tc.name)}<br><span class="muted">${esc(TPHONE[tc.id] || '')}</span>`], ['Расписание', `${g.slots.map(x => DOW[x.dow]).join(', ')} в ${g.slots[0].start}`], ['Учится с', fdate(s.since)]])}</section>
+  <div class="stack"><section class="panel"><h2>Учебный центр</h2>${kv([['Название', esc(S.center.name)], ['Адрес', `${esc(S.center.address)}, ${esc(S.center.city)}`], ['WhatsApp', '+7 727 355 40 40'], ['Часы работы', 'пн–сб, 9:00–21:00']])}</section>
+    <section class="panel"><h2>Демо: другой ребёнок</h2>${childSelect()}</section></div></div>`, 'p');
+}
+
+/* student */
+route(/^\/s(?:\/(\w+))?$/, page => {
+  page = ['home', 'schedule', 'attendance', 'profile'].includes(page) ? page : 'home';
+  if (!STU(childId)) childId = S.students[0].id;
+  const s = STU(childId), g = G(s.gid), tc = TCH(g.teacherId), first = s.name.split(' ')[0], att = attendance(s.id);
+  let streak = 0; for (const l of [...att.held].sort(byTime).reverse()) { if (l.marks[s.id] === 'p') streak++; else break; }
+  if (page === 'home') {
+    const nx = lessonsAhead(g, 14)[0];
+    return shell('home', `${head(`Привет, ${esc(first)}!`, `${esc(g.name)} · ${esc(tc.name)}`)}
+    <div class="cols"><div class="stack">
+      <section class="panel next"><div class="small muted">Следующий урок</div>${nx ? `<div class="nx">${rel(nx.date)}, ${nx.start}</div><div class="muted">${esc(g.name)} · ${esc(ROOM(g.roomId).name)} · ${esc(tc.name)}</div>` : '<div class="nx">Не запланирован</div>'}</section>
+      ${balanceCard(s, false)}</div>
+    <div class="stack"><section class="panel"><h2>Посещаемость<a class="act small" href="#/s/attendance">Подробнее</a></h2><div class="balance"><span class="big num" style="font-size:44px">${att.pct}%</span><span class="muted">${att.p} из ${att.held.length} уроков</span></div><div class="meter" style="margin-top:14px"><i style="width:${att.pct}%"></i></div></section>
+      <section class="panel"><h2>Серия без пропусков</h2><div class="balance"><span class="big num" style="font-size:44px">${streak}</span><span class="muted">${plural(streak, 'урок подряд', 'урока подряд', 'уроков подряд')}</span></div></section></div></div>`, 's');
+  }
+  if (page === 'schedule') return shell('schedule', `${head('Расписание', 'Ближайшие две недели')}${scheduleTable(s)}`, 's');
+  if (page === 'attendance') {
+    const rows = [...att.held].sort(byTime).reverse();
+    return shell('attendance', `${head('Посещаемость', `${att.pct}% · ${att.p} из ${att.held.length} уроков`)}
+    <section class="panel"><div class="dots" aria-hidden="true">${[...rows].reverse().map(l => `<i class="${l.marks[s.id]}"></i>`).join('')}</div><div class="legend" style="margin:10px 0 6px"><span><i style="background:var(--acc)"></i>был</span><span><i style="background:var(--red)"></i>пропуск</span><span><i style="background:#B4BDC8"></i>уважительная</span></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Дата</th><th>Занятие</th><th class="r">Отметка</th></tr></thead><tbody>
+    ${rows.map(l => `<tr><td class="num">${fdow(l.date)}, ${l.start}</td><td>${esc(g.name)}</td><td class="r">${l.marks[s.id] === 'p' ? '<span class="pill ok">был</span>' : l.marks[s.id] === 'a' ? '<span class="pill bad">пропуск</span>' : '<span class="pill n">уважительная</span>'}</td></tr>`).join('')}
+    </tbody></table></div></section>`, 's');
+  }
+  return shell('profile', `${head('Профиль')}
+  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(s.name))}</span><div><h2 style="font-size:20px">${esc(s.name)}</h2><div class="muted">Ученик · ${esc(S.center.name)}</div></div></div>
+    ${kv([['Группа', esc(g.name)], ['Возраст группы', esc(g.age)], ['Преподаватель', esc(tc.name)], ['Расписание', `${g.slots.map(x => DOW[x.dow]).join(', ')} в ${g.slots[0].start}`], ['Родитель', esc(s.parent)], ['Учится с', fdate(s.since)]])}</section>
+  <section class="panel"><h2>Демо: другой ученик</h2>${childSelect()}</section></div>`, 's');
 });
 
 /* ------------------------------------------------------------------ public catalogue */
@@ -478,7 +601,8 @@ A.reset = () => { localStorage.removeItem(KEY); S = seed(); save(); teacherDone 
 A.week = el => { const d = +el.dataset.d; weekOffset = d === 0 ? 0 : weekOffset + d; render(); };
 A['lead-done'] = el => { const l = S.leads.find(x => x.id === el.dataset.id); l.status = 'done'; save(); toast('Заявка обработана'); render(); };
 A.cat = el => { catFilter = el.dataset.v; render(); };
-A.tpick = el => { teacherLesson = el.dataset.id; teacherDraft = {}; teacherDone = null; render(); };
+A.tpick = el => { teacherLesson = el.dataset.id; teacherDraft = {}; teacherDone = null; if (location.hash !== '#/t/today') location.hash = '/t/today'; else render(); };
+A.tmonth = el => { payMonth = +el.dataset.m; render(); };
 A.tedit = () => { teacherDone = null; render(); };
 A.setmark = el => {
   const draft = $('#modal').hidden ? teacherDraft : modalDraft;
@@ -617,7 +741,7 @@ document.addEventListener('change', e => {
   if (k === 'gsearch') { studentQuery = e.target.value; studentFilter = 'all'; if (location.hash !== '#/o/students') location.hash = '/o/students'; else render(); }
   if (k === 'policy') { S.policy.chargeAbsent = e.target.checked; save(); toast(e.target.checked ? 'Пропуски без причины теперь списываются' : 'Пропуски больше не списываются — остатки пересчитаны'); render(); }
   if (k === 'teacher') { teacherId = e.target.value; teacherLesson = null; teacherDone = null; render(); }
-  if (k === 'child') { location.hash = '/p/' + e.target.value; }
+  if (k === 'child') { childId = e.target.value; render(); }
 });
 
 load(); render();
