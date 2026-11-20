@@ -195,31 +195,65 @@ window.addEventListener('hashchange', render);
 
 /* ------------------------------------------------------------------ login */
 route(/^\/$/, () => `
-<main class="login">
-  <section class="login-side">
-    <div class="brand"><img class="mk" src="icons/mark.svg" alt=""><img src="img/logo_sabaq.png" alt="Sabaq"></div>
-    <div class="pitch">
+<div class="lp">
+  <header class="lp-top"><div class="lp-in">
+    <a href="#/" class="brand"><img class="mk" src="icons/mark.svg" alt=""><img src="img/logo_sabaq.png" alt="Sabaq"></a>
+    <nav class="lp-nav"><a href="#how" data-scroll>Как работает</a><a href="#roles" data-scroll>Кабинеты</a><a href="#price" data-scroll>Цена</a><a href="#/catalog">Каталог мест</a></nav>
+    <a class="btn" href="#roles" data-scroll>Войти в демо</a>
+  </div></header>
+
+  <section class="lp-hero">
+    <div class="lp-in">
+      <p class="lp-kicker"><span class="dot"></span>Учёт для частных учебных центров Казахстана</p>
       <h1>Каждый урок посчитан.</h1>
-      <p class="lead">Учёт для частных учебных центров: отметка урока сама списывает абонемент, обновляет долг, сообщает родителю и начисляет зарплату.</p>
-      <div class="roles">
-        <a class="role owner" href="#/o/home"><span class="ic">${ic('home', 20)}</span><span><b>Владелец центра</b><span>Деньги, долги, расписание, зарплаты</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/t/today"><span class="ic">${ic('teacher', 20)}</span><span><b>Преподаватель</b><span>Отметить урок за 10 секунд с телефона</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/p/home"><span class="ic">${ic('user', 20)}</span><span><b>Родитель</b><span>Остаток занятий и оплата через Kaspi QR</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/s/home"><span class="ic">${ic('book', 20)}</span><span><b>Ученик</b><span>Расписание, посещаемость, сколько осталось</span></span>${ic('chev', 16)}</a>
-        <a class="role" href="#/catalog"><span class="ic">${ic('store', 20)}</span><span><b>Каталог</b><span>Свободные места из живого расписания</span></span>${ic('chev', 16)}</a>
-      </div>
-      <p class="note">Демо-центр «${esc(S.center.name)}», ${esc(S.center.city)} · пароль не нужен <button class="btn ghost sm" data-act="reset">${ic('reset', 14)}Сбросить демо</button></p>
+      <p class="lp-lead">Преподаватель отмечает урок — Sabaq сам списывает занятие с абонемента, показывает долг, сообщает родителю и начисляет зарплату. Без вечерней сверки Excel и Kaspi.</p>
+      <div class="lp-cta"><a class="btn lg" href="#roles" data-scroll>Открыть демо</a><a class="btn lg ghost" href="#/catalog">Свободные места</a></div>
     </div>
-    <div class="legal"><span>© 2026 Sabaq</span><span>Данные демонстрационные и хранятся в этом браузере</span></div>
+    <div class="lp-stage"><figure class="lp-shot"><img src="img/dashboard.jpg" alt="Главная владельца в Sabaq: оплаты, долги и уроки, которые нужно отметить" width="1800" height="1125"></figure></div>
   </section>
-  <section class="login-art dark">
-    <div class="pattern" aria-hidden="true"><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="o"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i></div>
-    <div class="art-copy">
-      <p class="q">Каждый проведённый урок списывается в тот же момент — без вечерней сверки Excel и Kaspi.</p>
-      <div class="facts"><div><b>&lt; 0,3 %</b><span>несписанных уроков — цель пилотов</span></div><div><b>10 с</b><span>чтобы отметить урок</span></div><div><b>4 роли</b><span>владелец, преподаватель, родитель, ученик</span></div></div>
+
+  <section class="lp-facts"><div class="lp-in">
+    <div><b>&lt;&nbsp;0,3&nbsp;%</b><span>несписанных уроков — цель пилотов (сейчас в центрах 1–2&nbsp;%)</span></div>
+    <div><b>10&nbsp;секунд</b><span>чтобы отметить урок с телефона — все «пришли» по умолчанию</span></div>
+    <div><b>0&nbsp;споров</b><span>о зарплате: она считается из тех же отметок, что и списания</span></div>
+  </div></section>
+
+  <section class="lp-how" id="how"><div class="lp-in">
+    <h2>Одно нажатие — пять результатов</h2>
+    <p class="lp-sub">Так выглядит урок в Sabaq. Раньше это пять разных мест: тетрадь, Excel, Kaspi, WhatsApp и расчёт зарплаты.</p>
+    <ol class="lp-steps">
+      <li><span class="n">1</span><b>Урок отмечен</b><span>Преподаватель нажимает «Урок проведён» — только отсутствующих надо отметить отдельно.</span></li>
+      <li><span class="n">2</span><b>Абонементы списаны</b><span>Пропуск по уважительной переносится, без причины — по правилу центра.</span></li>
+      <li><span class="n">3</span><b>Долг виден сразу</b><span>Если занятия закончились, владелец видит сумму и шлёт напоминание.</span></li>
+      <li><span class="n">4</span><b>Родитель в курсе</b><span>В кабинете — остаток занятий и оплата через Kaspi QR в два касания.</span></li>
+      <li><span class="n">5</span><b>Зарплата начислена</b><span>Урок × ставка, по каждому преподавателю, с выгрузкой в файл.</span></li>
+    </ol>
+  </div></section>
+
+  <section class="lp-roles" id="roles"><div class="lp-in">
+    <h2>Кабинет для каждого</h2>
+    <p class="lp-sub">Демо-центр «${esc(S.center.name)}», ${esc(S.center.city)}. Пароль не нужен — выберите, кем войти.</p>
+    <div class="lp-grid">
+      <a class="lp-role main" href="#/o/home"><span class="ic">${ic('home', 22)}</span><b>Владелец центра</b><span>Оплаты, долги, расписание, зарплаты и всё, что требует внимания.</span><em>Открыть кабинет ${ic('chev', 14)}</em></a>
+      <a class="lp-role" href="#/t/today"><span class="ic">${ic('teacher', 22)}</span><b>Преподаватель</b><span>Отметка урока, мои занятия, группы и зарплата за месяц.</span><em>Открыть кабинет ${ic('chev', 14)}</em></a>
+      <a class="lp-role" href="#/p/home"><span class="ic">${ic('user', 22)}</span><b>Родитель</b><span>Сколько занятий осталось, расписание и оплата через Kaspi QR.</span><em>Открыть кабинет ${ic('chev', 14)}</em></a>
+      <a class="lp-role" href="#/s/home"><span class="ic">${ic('book', 22)}</span><b>Ученик</b><span>Следующий урок, посещаемость и серия без пропусков.</span><em>Открыть кабинет ${ic('chev', 14)}</em></a>
     </div>
-  </section>
-</main>`);
+  </div></section>
+
+  <section class="lp-price" id="price"><div class="lp-in">
+    <div><h2>Одна цена, всё включено</h2><p class="lp-sub">Меньше 1&nbsp;% оборота центра — при потерях 2–4&nbsp;% без учёта. Переносим ваш Excel сами и помогаем по вечерам, пока идут занятия.</p></div>
+    <div class="lp-plan"><div class="small muted">Тариф «Рост», до 300 учеников</div><div class="lp-amount">35 000 ₸<span>/ месяц</span></div>
+      <ul><li>Все кабинеты: владелец, преподаватели, родители, ученики</li><li>Kaspi QR, напоминания, зарплата, импорт из Excel</li><li>Данные хранятся в Казахстане</li></ul>
+      <a class="btn lg" href="#roles" data-scroll style="width:100%">Попробовать демо</a><div class="small muted" style="margin-top:10px;text-align:center">Пилот — 14 дней бесплатно</div></div>
+  </div></section>
+
+  <footer class="lp-foot"><div class="lp-in">
+    <span class="brand"><img class="mk" src="icons/mark.svg" alt=""><span>© 2026 Sabaq · Алматы</span></span>
+    <span class="muted">Учебный MVP · данные демонстрационные и хранятся в этом браузере</span>
+    <button class="btn ghost sm" data-act="reset">${ic('reset', 14)}Сбросить демо</button>
+  </div></footer>
+</div>`);
 
 /* ------------------------------------------------------------------ owner shell */
 const ROLE = {
@@ -727,6 +761,8 @@ A.csv = () => {
 function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
 
 document.addEventListener('click', e => {
+  const sc = e.target.closest('[data-scroll]');
+  if (sc) { e.preventDefault(); const t = document.getElementById(sc.getAttribute('href').slice(1)); if (t) t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
   const el = e.target.closest('[data-act]'); if (el && A[el.dataset.act]) { e.preventDefault(); A[el.dataset.act](el); return; }
   const go = e.target.closest('[data-go]'); if (go && !e.target.closest('a,button')) location.hash = go.dataset.go.slice(1);
 });

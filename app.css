@@ -358,3 +358,99 @@ h3{font-size:14.5px;font-weight:600}
 }
 .t-today{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
 @media (max-width:1100px){.t-today{grid-template-columns:1fr}}
+
+/* ========== landing page (start screen) ==========
+   One idea: the product itself is the hero. A wide screenshot sits tilted
+   and settles flat as you scroll — the only orchestrated motion on the page. */
+.lp{background:var(--paper);color:var(--ink)}
+.lp-in{max-width:1160px;margin:0 auto;padding:0 32px}
+.lp-top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.82);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
+.lp-top .lp-in{height:64px;display:flex;align-items:center;gap:32px}
+.lp-top .brand .mk{height:24px;width:24px}.lp-top .brand img:not(.mk){height:22px}
+.lp-nav{display:flex;gap:26px;font-size:14px;margin-left:12px}
+.lp-nav a{color:var(--ink2)} .lp-nav a:hover{color:var(--ink)}
+.lp-top .btn{margin-left:auto}
+
+.lp-hero{padding:96px 0 0;text-align:center;overflow:hidden;background:
+  radial-gradient(60% 50% at 50% 0%,#EEF4F8 0%,rgba(255,255,255,0) 70%)}
+.lp-kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);border:1px solid var(--line);border-radius:20px;padding:6px 14px;background:#fff}
+.lp-hero h1{font-size:clamp(44px,7vw,88px);line-height:1;letter-spacing:-.05em;font-weight:600;margin:26px auto 0;max-width:900px}
+.lp-lead{font-size:clamp(16px,1.6vw,19px);line-height:1.55;color:var(--ink2);max-width:640px;margin:24px auto 0}
+.lp-cta{display:flex;gap:12px;justify-content:center;margin-top:34px;flex-wrap:wrap}
+.lp-cta .btn{min-width:180px}
+.lp-stage{perspective:1600px;margin-top:64px;padding:0 32px}
+.lp-shot{max-width:1160px;margin:0 auto;border-radius:18px 18px 0 0;overflow:hidden;border:1px solid var(--line);border-bottom:0;background:#fff;
+  box-shadow:0 -1px 0 rgba(255,255,255,.6) inset,0 50px 100px -40px rgba(15,35,56,.35);transform-origin:50% 100%;transform:rotateX(14deg) scale(.96)}
+.lp-shot img{display:block;width:100%;height:auto}
+@supports (animation-timeline: view()){
+  .lp-shot{animation:settle linear both;animation-timeline:view();animation-range:entry 10% cover 45%}
+}
+@keyframes settle{to{transform:none}}
+@supports not (animation-timeline: view()){.lp-shot{transform:none}}
+
+.lp-facts{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
+.lp-facts .lp-in{display:grid;grid-template-columns:repeat(3,1fr)}
+.lp-facts .lp-in > div{padding:36px 28px;border-left:1px solid var(--line2)}
+.lp-facts .lp-in > div:first-child{border-left:0;padding-left:0}
+.lp-facts b{display:block;font-size:34px;font-weight:500;letter-spacing:-.03em}
+.lp-facts span{display:block;color:var(--ink2);font-size:14px;margin-top:8px;line-height:1.5;max-width:300px}
+
+.lp h2{font-size:clamp(30px,3.6vw,44px);letter-spacing:-.04em;line-height:1.08;font-weight:600}
+.lp-sub{color:var(--ink2);font-size:16.5px;line-height:1.55;max-width:600px;margin-top:14px}
+.lp-how{background:var(--brand);color:#fff;padding:110px 0}
+.lp-how .lp-sub{color:#A9BED2}
+.lp-steps{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:56px;counter-reset:s;border-top:1px solid rgba(255,255,255,.14)}
+.lp-steps li{padding:26px 22px 0 0;position:relative}
+.lp-steps li::before{content:"";position:absolute;top:-1px;left:0;width:36px;height:2px;background:#2BC4BE}
+.lp-steps .n{font-size:13px;color:#7FD6D3;font-weight:600}
+.lp-steps b{display:block;font-size:18px;font-weight:600;margin:10px 0 8px;letter-spacing:-.01em}
+.lp-steps li > span:last-child{display:block;color:#A9BED2;font-size:14px;line-height:1.55}
+
+.lp-roles{padding:110px 0}
+.lp-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:14px;margin-top:44px}
+.lp-role{display:flex;flex-direction:column;gap:10px;padding:26px 24px;border:1px solid var(--line);border-radius:18px;color:inherit;background:#fff;
+  transition:border-color .2s,box-shadow .2s,transform .2s;min-height:250px}
+.lp-role:hover{border-color:#CDD4DD;box-shadow:0 20px 40px -24px rgba(15,35,56,.25);transform:translateY(-2px)}
+.lp-role .ic{width:44px;height:44px;border-radius:12px;background:var(--line2);display:grid;place-items:center;color:var(--ink);margin-bottom:12px}
+.lp-role b{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.lp-role > span:not(.ic){color:var(--ink2);font-size:14px;line-height:1.55}
+.lp-role em{margin-top:auto;font-style:normal;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--acc-ink)}
+.lp-role.main{background:var(--brand);border-color:var(--brand);color:#fff}
+.lp-role.main .ic{background:rgba(255,255,255,.1);color:#fff}
+.lp-role.main > span:not(.ic){color:#B6C7D8}
+.lp-role.main em{color:#7FD6D3}
+
+.lp-price{padding:0 0 110px}
+.lp-price .lp-in{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;border-top:1px solid var(--line);padding-top:96px}
+.lp-plan{border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:var(--shadow)}
+.lp-amount{font-size:48px;font-weight:500;letter-spacing:-.04em;margin:8px 0 18px}
+.lp-amount span{font-size:15px;color:var(--mut);letter-spacing:0;margin-left:8px}
+.lp-plan ul{list-style:none;margin-bottom:22px}
+.lp-plan li{position:relative;padding:9px 0 9px 26px;border-top:1px solid var(--line2);font-size:14px;color:var(--ink2)}
+.lp-plan li::before{content:"";position:absolute;left:2px;top:15px;width:10px;height:10px;border-radius:3px;background:var(--acc)}
+
+.lp-foot{border-top:1px solid var(--line);background:var(--bg)}
+.lp-foot .lp-in{display:flex;align-items:center;gap:24px;padding-top:24px;padding-bottom:24px;font-size:13px;flex-wrap:wrap}
+.lp-foot .brand{gap:10px;color:var(--ink2)} .lp-foot .mk{height:20px;width:20px}
+.lp-foot .btn{margin-left:auto}
+
+@media (max-width:1000px){
+  .lp-steps{grid-template-columns:1fr 1fr;row-gap:28px}
+  .lp-grid{grid-template-columns:1fr 1fr}
+  .lp-price .lp-in{grid-template-columns:1fr;gap:32px}
+}
+@media (max-width:700px){
+  .lp-in{padding:0 20px}
+  .lp-nav{display:none}
+  .lp-hero{padding-top:56px}
+  .lp-stage{padding:0 12px;margin-top:44px}
+  .lp-shot{border-radius:12px 12px 0 0}
+  .lp-facts .lp-in{grid-template-columns:1fr}
+  .lp-facts .lp-in > div{border-left:0;border-top:1px solid var(--line2);padding:22px 0}
+  .lp-facts .lp-in > div:first-child{border-top:0}
+  .lp-how,.lp-roles{padding:72px 0}
+  .lp-steps,.lp-grid{grid-template-columns:1fr}
+  .lp-role{min-height:0}
+  .lp-price{padding-bottom:72px}.lp-price .lp-in{padding-top:64px}
+  .lp-foot .btn{margin-left:0}
+}
