@@ -63,10 +63,10 @@ function seed() {
   const rnd = mulberry(20261120);
   const pick = a => a[Math.floor(rnd() * a.length)];
   const teachers = [
-    { id: 't1', name: 'Айгерим Нурланова', subject: 'Математика', rate: 6000 },
-    { id: 't2', name: 'Данияр Сейтказы', subject: 'Английский', rate: 7000 },
-    { id: 't3', name: 'Тимур Ахметов', subject: 'Программирование', rate: 6500 },
-    { id: 't4', name: 'Сауле Жумабаева', subject: 'Подготовка к НИШ', rate: 5500 },
+    { id: 't1', name: 'Айгерим Нурланова', subject: 'Математика', rate: 12000 },
+    { id: 't2', name: 'Данияр Сейтказы', subject: 'Английский', rate: 14000 },
+    { id: 't3', name: 'Тимур Ахметов', subject: 'Программирование', rate: 13000 },
+    { id: 't4', name: 'Сауле Жумабаева', subject: 'Подготовка к НИШ', rate: 10000 },
   ];
   const rooms = [{ id: 'r1', name: 'Аудитория 1' }, { id: 'r2', name: 'Аудитория 2' }, { id: 'r3', name: 'Аудитория 3' }, { id: 'r4', name: 'Компьютерный класс' }];
   const groups = [
@@ -96,16 +96,10 @@ function seed() {
   // lessons for weeks -4..+3 around today
   const monday = addDays(TODAY, -((TODAY.getDay() + 6) % 7));
   const lessons = [];
-  for (let d = addDays(monday, -28); d < addDays(monday, 28); d = addDays(d, 1)) {
+  const start = new Date(TODAY.getFullYear(), TODAY.getMonth() - 1, 1);
+  for (let d = start; d < addDays(monday, 28); d = addDays(d, 1)) {
     groups.forEach(g => g.slots.forEach(sl => { if (sl.dow === d.getDay()) lessons.push(mkLesson(g, iso(d), sl)); }));
   }
-  const payments = [];
-  students.forEach(s => {
-    const g = groups.find(x => x.id === s.gid);
-    payments.push({ id: uid('p'), sid: s.id, date: iso(addDays(TODAY, -28)), amount: 0, lessons: Math.floor(rnd() * 6) - 1, method: 'import' });
-    payments.push({ id: uid('p'), sid: s.id, date: iso(addDays(TODAY, -27 + Math.floor(rnd() * 14))), amount: g.pkgPrice, lessons: g.pkgLessons, method: rnd() < 0.8 ? 'kaspi' : 'cash' });
-    if (rnd() < 0.35) payments.push({ id: uid('p'), sid: s.id, date: iso(addDays(TODAY, -12 + Math.floor(rnd() * 12))), amount: g.pkgPrice, lessons: g.pkgLessons, method: rnd() < 0.85 ? 'kaspi' : 'cash' });
-  });
   // mark the past; leave one recent lesson unmarked so the dashboard has something to flag
   const past = lessons.filter(l => l.date < T).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
   const leaveOpen = [...past].reverse().find(l => l.gid === 'g5');
@@ -114,8 +108,25 @@ function seed() {
     l.status = 'held';
     students.filter(s => s.gid === l.gid).forEach(s => { const r = rnd(); l.marks[s.id] = r < 0.86 ? 'p' : r < 0.93 ? 'a' : 'e'; });
   });
+  // payments follow real behaviour: a parent buys the next package when the current one runs out;
+  // a few families stop paying in the last weeks and fall into debt
+  const payments = [];
+  const lateFrom = iso(addDays(TODAY, -16));
+  students.forEach(s => {
+    const g = groups.find(x => x.id === s.gid);
+    const late = rnd() < 0.2;
+    let bal = Math.floor(rnd() * 4);
+    payments.push({ id: uid('p'), sid: s.id, date: iso(start), amount: 0, lessons: bal, method: 'import' });
+    const pay = d => { payments.push({ id: uid('p'), sid: s.id, date: d, amount: g.pkgPrice, lessons: g.pkgLessons, method: rnd() < 0.82 ? 'kaspi' : 'cash' }); bal += g.pkgLessons; };
+    if (bal < 2) pay(iso(addDays(start, Math.floor(rnd() * 3))));
+    past.filter(l => l.gid === g.id && l.status === 'held').forEach(l => {
+      if (bal <= 0 && !(late && l.date >= lateFrom)) pay(iso(addDays(parse(l.date), -Math.floor(rnd() * 3))) < iso(start) ? iso(start) : iso(addDays(parse(l.date), -Math.floor(rnd() * 3))));
+      const m = l.marks[s.id]; if (m === 'p' || m === 'a') bal -= 1;
+    });
+    if (!late && bal <= 3 && rnd() < 0.8) pay(iso(addDays(TODAY, -Math.floor(rnd() * 4))));
+  });
   const leads = [{ id: uid('l'), name: 'Мама Алана, 9 лет', phone: '+7 701 555 21 40', gid: 'g4', date: iso(addDays(TODAY, -1)), status: 'new' }];
-  return { v: 1, seededOn: T, center: { name: 'IQ Academy', city: 'Алматы', address: 'ул. Байзакова, 280' }, policy: { chargeAbsent: true }, teachers, rooms, groups, students, lessons, payments, leads, sent: [] };
+  return { v: 4, seededOn: T, center: { name: 'IQ Academy', city: 'Алматы', address: 'ул. Байзакова, 280' }, policy: { chargeAbsent: true }, teachers, rooms, groups, students, lessons, payments, leads, sent: [] };
 }
 function mkLesson(g, date, sl) { return { id: `${g.id}_${date}_${sl.start}`, gid: g.id, date, start: sl.start, dur: sl.dur, status: 'planned', marks: {} }; }
 
@@ -123,7 +134,7 @@ let S;
 function load() {
   try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
   const stale = S && (TODAY - parse(S.seededOn)) / 864e5 > 6;
-  if (!S || S.v !== 1 || stale) { S = seed(); save(); }
+  if (!S || S.v !== 4 || stale) { S = seed(); save(); }
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode: keep in memory */ } }
 
@@ -255,6 +266,33 @@ route(/^\/$/, () => `
   </div></footer>
 </div>`);
 
+
+/* ------------------------------------------------------------------ avatars: illustrated, deterministic per name (no real photos) */
+const hashStr = t => [...String(t)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const AV_BG = ['#DCEBF5', '#DFF2EF', '#FBEADB', '#EAE5F5', '#FBF1D3', '#E3E9EF', '#F6E1E4'];
+const AV_SKIN = ['#F3D2B5', '#E9BE98', '#D9A57A', '#C68A5E', '#A86F49'];
+const AV_HAIR = ['#24180F', '#3A271B', '#5B3A24', '#1E2433', '#7B4A2A', '#A0652F'];
+const AV_SHIRT = ['#0F3355', '#13A19E', '#5B6B7D', '#C9372C', '#7C5CBF', '#D08A2C', '#2F6F4F'];
+function avatar(name, size = 28) {
+  const h = hashStr(name), r = k => (h >>> (k * 3)) % 997;
+  const bg = AV_BG[r(1) % AV_BG.length], skin = AV_SKIN[r(2) % AV_SKIN.length], hair = AV_HAIR[r(3) % AV_HAIR.length], shirt = AV_SHIRT[r(4) % AV_SHIRT.length];
+  const style = r(5) % 4, glasses = r(6) % 5 === 0;
+  const hairBack = style === 2 ? `<path d="M9 21c0-8 4-13 11-13s11 5 11 13v12H9z" fill="${hair}"/>` : '';
+  const hairTop = [
+    `<path d="M11 18c0-6 4-9 9-9s9 3 9 9c-2-3-5-4-9-4s-7 1-9 4z" fill="${hair}"/>`,
+    `<path d="M11 19c-1-7 3-11 9-11s10 4 9 11c-1-2-3-4-6-4-2 1-5 1-7 0-3 0-4 2-5 4z" fill="${hair}"/>`,
+    `<path d="M11 19c0-7 4-10 9-10s9 3 9 10c-3-1-6-4-7-6-2 3-6 5-11 6z" fill="${hair}"/>`,
+    `<path d="M12 16c1-4 4-6 8-6s7 2 8 6c-2-1-5-2-8-2s-6 1-8 2z" fill="${hair}"/>`][style];
+  const gl = glasses ? `<g fill="none" stroke="#1E2433" stroke-width=".9"><circle cx="16.6" cy="20.6" r="2.3"/><circle cx="23.4" cy="20.6" r="2.3"/><path d="M18.9 20.6h2.2"/></g>` : '';
+  return `<svg class="avsvg" width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" fill="${bg}"/>${hairBack}
+    <path d="M7 40c1-7 6-10 13-10s12 3 13 10z" fill="${shirt}"/><rect x="17" y="25" width="6" height="6" rx="2" fill="${skin}"/>
+    <ellipse cx="20" cy="20" rx="8.2" ry="9" fill="${skin}"/>${hairTop}
+    <circle cx="16.8" cy="20.8" r=".95" fill="#1E2433"/><circle cx="23.2" cy="20.8" r=".95" fill="#1E2433"/>${gl}
+    <path d="M17.6 24.6c1.4 1.1 3.4 1.1 4.8 0" fill="none" stroke="#7A4030" stroke-width=".9" stroke-linecap="round"/></svg>`;
+}
+const AVA = (name, cls = '') => `<span class="av pic ${cls}" title="${esc(name)}">${avatar(name, cls === 'xl' ? 56 : 28)}</span>`;
+/* the learning centre's own logo (a client brand, distinct from Sabaq) */
+const ORG_LOGO = `<svg class="orglogo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#F0642D"/><path d="M9 13.5c4-1.6 7.4-1.2 11 1.2v15c-3.6-2.4-7-2.8-11-1.2z" fill="#fff"/><path d="M31 13.5c-4-1.6-7.4-1.2-11 1.2v15c3.6-2.4 7-2.8 11-1.2z" fill="#FFD9C7"/><circle cx="20" cy="9.5" r="2.4" fill="#fff"/></svg>`;
 /* ------------------------------------------------------------------ owner shell */
 const ROLE = {
   o: { base: '#/o/', who: () => ['Ерлан Касенов', 'Владелец'], nav: () => [['home', 'home', 'Главная', unmarked().length + S.leads.filter(l => l.status === 'new').length], ['students', 'users', 'Ученики'], ['schedule', 'cal', 'Расписание'], ['finance', 'wallet', 'Финансы'], ['catalog', 'store', 'Каталог']] },
@@ -269,17 +307,17 @@ function shell(active, body, role = 'o') {
   const title = (nav.find(n => n[0] === active) || [0, 0, ''])[2];
   return `<div class="shell"><aside class="side">
     <div class="logo brand">${MK}<img src="img/logo_sabaq.png" alt="Sabaq"></div>
-    <div class="org"><span class="sq">IQ</span><div><b>${esc(S.center.name)}</b><span>${esc(S.center.city)} · ${role === 'o' ? S.students.length + ' учеников' : meSub.toLowerCase()}</span></div></div>
+    <div class="org"><span class="sq img">${ORG_LOGO}</span><div><b>${esc(S.center.name)}</b><span>${esc(S.center.city)} · ${role === 'o' ? S.students.length + ' учеников' : meSub.toLowerCase()}</span></div></div>
     <nav class="nav" aria-label="Разделы">${nav.map(([k, i, t, b]) => `<a href="${R.base}${k}" class="${active === k ? 'on' : ''}"${active === k ? ' aria-current="page"' : ''}>${ic(i)}<span>${t}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('')}
       <div class="cap alt">Демо: другие роли</div>${OTHER.filter(o => o[0] !== role).map(o => `<a class="alt" href="${o[1]}">${ic(o[2])}<span>${o[3]}</span></a>`).join('')}</nav>
-    <div class="bottom"><div class="me"><span class="av">${esc(initials(meName))}</span><div><b>${esc(meName)}</b><span>${esc(meSub)}</span></div><a href="#/" class="btn ghost sm" style="margin-left:auto" aria-label="Выйти">${ic('out', 14)}</a></div></div>
+    <div class="bottom"><div class="me">${AVA(meName)}<div><b>${esc(meName)}</b><span>${esc(meSub)}</span></div><a href="#/" class="btn ghost sm" style="margin-left:auto" aria-label="Выйти">${ic('out', 14)}</a></div></div>
   </aside><main class="main">
     <div class="topbar"><span class="brand tb-brand">${MK}</span><div class="crumb">${esc(S.center.name)} / <b>${title}</b></div>
       ${role === 'o' ? `<label class="search">${ic('users', 15)}<span class="sr">Поиск ученика</span><input data-input="gsearch" placeholder="Найти ученика" value="${active === 'students' ? esc(studentQuery) : ''}"><span class="kbd">Enter</span></label>` : `<a href="#/" class="btn ghost sm topexit">${ic('out', 14)}Выйти</a>`}</div>
     <div class="content">${body}</div></main></div>`;
 }
 const head = (title, sub, actions = '') => `<div class="head"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="row">${actions}</div></div>`;
-const who = (name, sub) => `<div class="who"><span class="av">${esc(initials(name))}</span><div><div>${esc(name)}</div>${sub ? `<div class="small muted">${sub}</div>` : ''}</div></div>`;
+const who = (name, sub) => `<div class="who">${AVA(name)}<div><div>${esc(name)}</div>${sub ? `<div class="small muted">${sub}</div>` : ''}</div></div>`;
 const balPill = b => b < 0 ? `<span class="pill bad">долг ${Math.abs(b)}</span>` : b <= 1 ? `<span class="pill warn">${lessonsWord(b)}</span>` : `<span class="pill ok">${lessonsWord(b)}</span>`;
 
 /* dashboard */
@@ -526,7 +564,7 @@ route(/^\/t(?:\/(\w+))?$/, page => {
   const gs = S.groups.filter(g => g.teacherId === teacherId), st = gs.flatMap(g => groupStudents(g.id));
   const att = st.length ? Math.round(st.reduce((a, s) => a + attendance(s.id).pct, 0) / st.length) : 0;
   return shell('profile', `${head('Профиль')}
-  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(t.name))}</span><div><h2 style="font-size:20px">${esc(t.name)}</h2><div class="muted">${esc(t.subject)} · ${esc(S.center.name)}</div></div></div>
+  <div class="cols"><section class="panel"><div class="prof">${AVA(t.name, 'xl')}<div><h2 style="font-size:20px">${esc(t.name)}</h2><div class="muted">${esc(t.subject)} · ${esc(S.center.name)}</div></div></div>
     ${kv([['Телефон', esc(TPHONE[t.id] || '—')], ['Ставка', money(t.rate) + ' за урок'], ['Группы', gs.map(g => esc(g.name)).join('<br>')], ['Учеников', st.length], ['Средняя посещаемость', att + '%']])}</section>
   <section class="panel"><h2>Демо: другой преподаватель</h2><div class="field"><label for="tsel">Преподаватель</label><select id="tsel" data-input="teacher">${S.teachers.map(x => `<option value="${x.id}" ${x.id === teacherId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></div></section></div>`, 't');
 });
@@ -580,7 +618,7 @@ function parentPage(page) {
     <section class="panel"><h2>История списаний</h2>${histRows(ledger(s.id).reverse().filter(r => r.kind === 'lesson').slice(0, 12))}</section></div>`, 'p');
   }
   return shell('profile', `${head('Профиль')}
-  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(s.parent))}</span><div><h2 style="font-size:20px">${esc(s.parent)}</h2><div class="muted">Родитель · ${esc(s.phone)}</div></div></div>
+  <div class="cols"><section class="panel"><div class="prof">${AVA(s.parent, 'xl')}<div><h2 style="font-size:20px">${esc(s.parent)}</h2><div class="muted">Родитель · ${esc(s.phone)}</div></div></div>
     ${kv([['Ребёнок', esc(s.name)], ['Группа', esc(g.name)], ['Преподаватель', `${esc(tc.name)}<br><span class="muted">${esc(TPHONE[tc.id] || '')}</span>`], ['Расписание', `${g.slots.map(x => DOW[x.dow]).join(', ')} в ${g.slots[0].start}`], ['Учится с', fdate(s.since)]])}</section>
   <div class="stack"><section class="panel"><h2>Учебный центр</h2>${kv([['Название', esc(S.center.name)], ['Адрес', `${esc(S.center.address)}, ${esc(S.center.city)}`], ['WhatsApp', '+7 727 355 40 40'], ['Часы работы', 'пн–сб, 9:00–21:00']])}</section>
     <section class="panel"><h2>Демо: другой ребёнок</h2>${childSelect()}</section></div></div>`, 'p');
@@ -611,7 +649,7 @@ route(/^\/s(?:\/(\w+))?$/, page => {
     </tbody></table></div></section>`, 's');
   }
   return shell('profile', `${head('Профиль')}
-  <div class="cols"><section class="panel"><div class="prof"><span class="av xl">${esc(initials(s.name))}</span><div><h2 style="font-size:20px">${esc(s.name)}</h2><div class="muted">Ученик · ${esc(S.center.name)}</div></div></div>
+  <div class="cols"><section class="panel"><div class="prof">${AVA(s.name, 'xl')}<div><h2 style="font-size:20px">${esc(s.name)}</h2><div class="muted">Ученик · ${esc(S.center.name)}</div></div></div>
     ${kv([['Группа', esc(g.name)], ['Возраст группы', esc(g.age)], ['Преподаватель', esc(tc.name)], ['Расписание', `${g.slots.map(x => DOW[x.dow]).join(', ')} в ${g.slots[0].start}`], ['Родитель', esc(s.parent)], ['Учится с', fdate(s.since)]])}</section>
   <section class="panel"><h2>Демо: другой ученик</h2>${childSelect()}</section></div>`, 's');
 });
