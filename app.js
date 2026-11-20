@@ -196,30 +196,39 @@ window.addEventListener('hashchange', render);
 /* ------------------------------------------------------------------ login */
 route(/^\/$/, () => `
 <main class="login">
-  <section class="login-hero">
-    <img src="img/logo_sabaq_light.png" alt="Sabaq">
+  <section class="login-side">
+    <div class="brand"><img src="img/logo_sabaq.png" alt="Sabaq"></div>
     <div class="pitch">
-      <h1>Каждый урок посчитан</h1>
-      <p>Преподаватель отмечает урок — и Sabaq сам списывает занятие с абонемента, обновляет долг, сообщает родителю и начисляет зарплату.</p>
-      <div class="ledger-demo" aria-hidden="true">
-        <div><span class="dot"></span>Урок «ЕНТ: математика» проведён<b>10 учеников</b></div>
-        <div><span class="dot"></span>Списано с абонементов<b>−10 занятий</b></div>
-        <div><span class="dot"></span>Родителям: «осталось 7 занятий»<b>отправлено</b></div>
-        <div><span class="dot"></span>Зарплата преподавателя<b>+6 000 ₸</b></div>
+      <h1>Каждый урок посчитан.</h1>
+      <p class="lead">Учёт для частных учебных центров: отметка урока сама списывает абонемент, обновляет долг, сообщает родителю и начисляет зарплату.</p>
+      <div class="roles">
+        <a class="role owner" href="#/o/home"><span class="ic">${ic('home', 20)}</span><span><b>Владелец центра</b><span>Деньги, долги, расписание, зарплаты</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/t"><span class="ic">${ic('teacher', 20)}</span><span><b>Преподаватель</b><span>Отметить урок за 10 секунд с телефона</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/p"><span class="ic">${ic('user', 20)}</span><span><b>Родитель</b><span>Остаток занятий и оплата через Kaspi QR</span></span>${ic('chev', 16)}</a>
+        <a class="role" href="#/catalog"><span class="ic">${ic('store', 20)}</span><span><b>Каталог</b><span>Свободные места из живого расписания</span></span>${ic('chev', 16)}</a>
+      </div>
+      <p class="note">Демо-центр «${esc(S.center.name)}», ${esc(S.center.city)} · пароль не нужен <button class="btn ghost sm" data-act="reset">${ic('reset', 14)}Сбросить демо</button></p>
+    </div>
+    <div class="legal"><span>© 2026 Sabaq</span><span>Данные демонстрационные и хранятся в этом браузере</span></div>
+  </section>
+  <section class="login-art" aria-hidden="true">
+    <div class="preview">
+      <div class="card">
+        <div class="head2"><b>ЕНТ: математика</b><span class="lbl">сегодня, 18:00</span></div>
+        <div class="lbl" style="margin-bottom:8px">Айгерим нажала «Урок проведён»</div>
+        <div class="ledger-demo">
+          <div><span class="tick">${ic('check', 12)}</span>Отмечено учеников<b>9 из 10</b></div>
+          <div><span class="tick">${ic('book', 12)}</span>Списано с абонементов<b>−10 занятий</b></div>
+          <div><span class="tick">${ic('send', 12)}</span>Родителям: остаток занятий<b>10 сообщений</b></div>
+          <div><span class="tick">${ic('wallet', 12)}</span>Зарплата преподавателя<b class="p">+6 000 ₸</b></div>
+        </div>
+      </div>
+      <div class="card parent-balance" style="border:0">
+        <div class="small" style="color:#B6C7D8">Арман · абонемент</div>
+        <div class="row" style="align-items:baseline;margin-top:10px"><span class="big">7</span><span style="color:#C4D3E2">занятий осталось</span></div>
+        <div class="pips">${'<i class="left"></i>'.repeat(7)}${'<i></i>'.repeat(5)}</div>
       </div>
     </div>
-    <div class="foot">MVP · данные демонстрационные и хранятся только в этом браузере</div>
-  </section>
-  <section class="login-side">
-    <h2>Войти как</h2>
-    <p class="muted">Учебный центр «${esc(S.center.name)}», ${esc(S.center.city)}. Пароль в демо не нужен.</p>
-    <div class="roles">
-      <a class="role owner" href="#/o/home"><span class="ic">${ic('home', 22)}</span><span><b>Владелец центра</b><span>Деньги, долги, расписание, зарплаты</span></span>${ic('chev')}</a>
-      <a class="role" href="#/t"><span class="ic">${ic('teacher', 22)}</span><span><b>Преподаватель</b><span>Отметить урок за 10 секунд, с телефона</span></span>${ic('chev')}</a>
-      <a class="role" href="#/p"><span class="ic">${ic('user', 22)}</span><span><b>Родитель</b><span>Сколько занятий осталось, оплата через Kaspi QR</span></span>${ic('chev')}</a>
-      <a class="role" href="#/catalog"><span class="ic">${ic('store', 22)}</span><span><b>Каталог для родителей</b><span>Свободные места из живого расписания</span></span>${ic('chev')}</a>
-    </div>
-    <p class="note">Демо пересоздаётся раз в неделю. <button class="btn ghost sm" data-act="reset">${ic('reset', 16)}Сбросить демо-данные</button></p>
   </section>
 </main>`);
 
@@ -227,12 +236,17 @@ route(/^\/$/, () => `
 function shell(active, body) {
   const n = unmarked().length + S.leads.filter(l => l.status === 'new').length;
   const nav = [['home', 'home', 'Главная', n], ['students', 'users', 'Ученики'], ['schedule', 'cal', 'Расписание'], ['finance', 'wallet', 'Финансы'], ['catalog', 'store', 'Каталог']];
+  const titles = { home: 'Главная', students: 'Ученики', schedule: 'Расписание', finance: 'Финансы', catalog: 'Каталог' };
   return `<div class="shell"><aside class="side">
-    <img class="logo" src="img/logo_sabaq_light.png" alt="Sabaq">
-    <div class="center">${esc(S.center.name)} · ${esc(S.center.city)}</div>
-    <nav class="nav" aria-label="Разделы">${nav.map(([k, i, t, b]) => `<a href="#/o/${k}" class="${active === k ? 'on' : ''}"${active === k ? ' aria-current="page"' : ''}>${ic(i)}<span>${t}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('')}</nav>
-    <div class="bottom nav"><a href="#/t">${ic('teacher')}<span>Вид преподавателя</span></a><a href="#/p">${ic('user')}<span>Вид родителя</span></a><a href="#/">${ic('out')}<span>Сменить роль</span></a></div>
-  </aside><main class="main">${body}</main></div>`;
+    <img class="logo" src="img/logo_sabaq.png" alt="Sabaq">
+    <div class="org"><span class="sq">IQ</span><div><b>${esc(S.center.name)}</b><span>${esc(S.center.city)} · ${S.students.length} учеников</span></div></div>
+    <nav class="nav" aria-label="Разделы">${nav.map(([k, i, t, b]) => `<a href="#/o/${k}" class="${active === k ? 'on' : ''}"${active === k ? ' aria-current="page"' : ''}>${ic(i)}<span>${t}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('')}
+      <div class="cap">Другие роли</div><a href="#/t">${ic('teacher')}<span>Преподаватель</span></a><a href="#/p">${ic('user')}<span>Родитель</span></a></nav>
+    <div class="bottom"><div class="me"><span class="av">ЕК</span><div><b>Ерлан Касенов</b><span>Владелец</span></div><a href="#/" class="btn ghost sm" style="margin-left:auto" aria-label="Сменить роль">${ic('out', 14)}</a></div></div>
+  </aside><main class="main">
+    <div class="topbar"><div class="crumb">${esc(S.center.name)} / <b>${titles[active]}</b></div>
+      <label class="search">${ic('users', 15)}<span class="sr">Поиск ученика</span><input data-input="gsearch" placeholder="Найти ученика" value="${active === 'students' ? esc(studentQuery) : ''}"><span class="kbd">Enter</span></label></div>
+    <div class="content">${body}</div></main></div>`;
 }
 const head = (title, sub, actions = '') => `<div class="head"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="row">${actions}</div></div>`;
 const who = (name, sub) => `<div class="who"><span class="av">${esc(initials(name))}</span><div><div>${esc(name)}</div>${sub ? `<div class="small muted">${sub}</div>` : ''}</div></div>`;
@@ -427,9 +441,9 @@ route(/^\/t$/, () => {
   const L = S.lessons.find(l => l.id === teacherLesson);
   if (L && L.status === 'held' && !Object.keys(teacherDraft).length) teacherDraft = { ...L.marks };
   return `<div class="mobile"><div class="screen">
-  <header class="mtop"><div class="bar"><img src="img/logo_sabaq_light.png" alt="Sabaq"><a class="exit" href="#/">Выйти</a></div>
+  <header class="mtop"><div class="bar"><img src="img/logo_sabaq.png" alt="Sabaq"><a class="exit" href="#/">Выйти</a></div>
     <h1>${esc(t.name.split(' ')[0])}, ${(n => n ? `${n} ${plural(n, 'урок', 'урока', 'уроков')} к отметке` : list.length ? 'всё отмечено' : 'сегодня уроков нет')(list.filter(l => l.status === 'planned').length)}</h1>
-    <p>${DOWF[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTHS[TODAY.getMonth()]} · <label for="tsel" class="sr">Преподаватель</label><select id="tsel" data-input="teacher" style="background:transparent;border:0;color:#B6C7D8;font-size:14px">${S.teachers.map(x => `<option value="${x.id}" ${x.id === teacherId ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
+    <p>${DOWF[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTHS[TODAY.getMonth()]} · <label for="tsel" class="sr">Преподаватель</label><select id="tsel" data-input="teacher" style="background:transparent;border:0;font-size:13px">${S.teachers.map(x => `<option value="${x.id}" ${x.id === teacherId ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
   <div class="mbody">
     ${list.length ? `<div class="lessonpick">${list.map(l => { const g = G(l.gid); return `<button class="${l.id === teacherLesson ? 'on' : ''}" data-act="tpick" data-id="${l.id}"><span class="t num">${l.start}</span><span><b>${esc(g.name)}</b><div class="small muted">${rel(l.date)} · ${esc(ROOM(g.roomId).name)}</div></span>${l.status === 'held' ? '<span class="pill ok">отмечен</span>' : l.date < T ? '<span class="pill bad">просрочен</span>' : '<span class="pill n">к отметке</span>'}</button>`; }).join('')}</div>` : `<div class="mcard empty">Отмечать нечего. Ближайшие уроки: ${next.map(l => `${rel(l.date)} в ${l.start}`).join(', ') || 'не запланированы'}.</div>`}
     ${L ? (teacherDone === L.id ? `<div class="mcard"><h2 style="margin-bottom:6px">Готово. Вот что сделал Sabaq</h2><div id="chain"></div></div>
@@ -446,8 +460,8 @@ route(/^\/p(?:\/(\w+))?$/, sid => {
   const upcoming = S.lessons.filter(l => l.gid === g.id && l.date >= T && l.status === 'planned').sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).slice(0, 3);
   const pips = [...Array(Math.min(Math.max(g.pkgLessons, b), 24))].map((_, i) => `<i class="${i < b ? 'left' : ''}"></i>`).join('') + (b < 0 ? [...Array(Math.min(-b, 12))].map(() => '<i class="debt"></i>').join('') : '');
   return `<div class="mobile"><div class="screen">
-  <header class="mtop"><div class="bar"><img src="img/logo_sabaq_light.png" alt="Sabaq"><a class="exit" href="#/">Выйти</a></div>
-    <h1>${esc(s.parent.split(' ')[0])}, здравствуйте</h1><p><label for="psel" class="sr">Ребёнок</label><select id="psel" data-input="child" style="background:transparent;border:0;color:#B6C7D8;font-size:14px">${S.students.map(x => `<option value="${x.id}" ${x.id === s.id ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
+  <header class="mtop"><div class="bar"><img src="img/logo_sabaq.png" alt="Sabaq"><a class="exit" href="#/">Выйти</a></div>
+    <h1>${esc(s.parent.split(' ')[0])}, здравствуйте</h1><p><label for="psel" class="sr">Ребёнок</label><select id="psel" data-input="child" style="background:transparent;border:0;font-size:13px">${S.students.map(x => `<option value="${x.id}" ${x.id === s.id ? 'selected' : ''} style="color:#0F3355">${esc(x.name)}</option>`).join('')}</select></p></header>
   <div class="mbody">
     <div class="parent-balance"><div class="small" style="color:#B6C7D8">${esc(s.name.split(' ')[0])} · ${esc(g.name)}</div>
       <div class="row" style="align-items:baseline;margin-top:8px"><span class="big num">${b}</span><span style="color:#C4D3E2">${b < 0 ? plural(-b, 'занятие в долг', 'занятия в долг', 'занятий в долг') : plural(b, 'занятие осталось', 'занятия осталось', 'занятий осталось')}</span></div>
@@ -465,12 +479,12 @@ let catFilter = 'all';
 route(/^\/catalog$/, () => {
   const subj = [...new Set(S.groups.map(g => g.subject))];
   const gs = S.groups.filter(g => catFilter === 'all' || g.subject === catFilter);
-  return `<div class="pub"><header class="pubtop"><div class="in"><img src="img/logo_sabaq.png" alt="Sabaq"><span class="muted small" style="margin-left:auto">Каталог · ${esc(S.center.city)}</span><a class="btn ghost sm" href="#/">Войти</a></div></header>
-  <section class="pubhero"><span class="live"><span class="dot"></span>Места обновляются из расписания центров</span><h1 style="margin-top:12px">Свободные места в учебных центрах Алматы</h1><p>Не объявление месячной давности: если группа набрана, она пропадёт отсюда сама. Первый урок — пробный.</p></section>
+  return `<div class="pub"><header class="pubtop"><div class="in"><a href="#/"><img src="img/logo_sabaq.png" alt="Sabaq"></a><nav><a href="#/catalog" class="on">Каталог</a><a href="#/">Для учебных центров</a></nav><div class="right"><a class="btn ghost sm" href="#/">Войти</a></div></div></header>
+  <section class="pubhero"><span class="live"><span class="dot"></span>Обновляется из расписания центров</span><h1>Свободные места в учебных центрах ${esc(S.center.city)}</h1><p>Не объявление месячной давности: набранная группа исчезает отсюда сама. Первый урок — пробный и бесплатный.</p></section>
   <div class="filters" role="group" aria-label="Направление"><button class="chip ${catFilter === 'all' ? 'on' : ''}" data-act="cat" data-v="all">Все</button>${subj.map(x => `<button class="chip ${catFilter === x ? 'on' : ''}" data-act="cat" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   <div class="offers">${gs.map(g => { const n = groupStudents(g.id).length, free = g.capacity - n; return `<article class="offer"><div><h3>${esc(g.name)}</h3><div class="meta">${esc(S.center.name)} · ${esc(S.center.address)} · ${esc(g.age)}<br>${g.slots.map(s => DOW[s.dow]).join(', ')} в ${g.slots[0].start} · ${money(perLesson(g))} за урок, пакетом ${money(g.pkgPrice)}</div></div>
     <div class="seats"><div class="s" aria-hidden="true">${[...Array(g.capacity)].map((_, i) => `<i class="${i >= n ? 'free' : ''}"></i>`).join('')}</div><span>${free > 0 ? `свободно ${free} из ${g.capacity}` : 'группа набрана'}</span></div>
-    ${free > 0 ? `<button class="btn" data-act="trial" data-id="${g.id}">Пробный урок</button>` : `<button class="btn ghost" disabled>Мест нет</button>`}</article>`; }).join('')}</div></div>`;
+    ${free > 0 ? `<button class="btn" data-act="trial" data-id="${g.id}">Пробный урок</button>` : `<button class="btn ghost" disabled>Мест нет</button>`}</article>`; }).join('')}</div><footer class="pubfoot"><span>© 2026 Sabaq</span><span>Места — из живого расписания центров</span></footer></div>`;
 });
 
 /* ------------------------------------------------------------------ actions */
@@ -615,6 +629,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const k = e.target.dataset.input; if (!k) return;
   if (k === 'gf') { studentFilter = e.target.value; render(); }
+  if (k === 'gsearch') { studentQuery = e.target.value; studentFilter = 'all'; if (location.hash !== '#/o/students') location.hash = '/o/students'; else render(); }
   if (k === 'policy') { S.policy.chargeAbsent = e.target.checked; save(); toast(e.target.checked ? 'Пропуски без причины теперь списываются' : 'Пропуски больше не списываются — остатки пересчитаны'); render(); }
   if (k === 'teacher') { teacherId = e.target.value; teacherLesson = null; teacherDone = null; render(); }
   if (k === 'child') { location.hash = '/p/' + e.target.value; }
